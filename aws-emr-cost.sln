@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aws-emr-cost", "aws-emr-cost\aws-emr-cost.csproj", "{EADFE523-08A7-4F04-BBA3-9B81D9C2194E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj", "{5A429B14-EC52-4E40-AFE4-A55C463C5315}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EADFE523-08A7-4F04-BBA3-9B81D9C2194E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EADFE523-08A7-4F04-BBA3-9B81D9C2194E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EADFE523-08A7-4F04-BBA3-9B81D9C2194E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EADFE523-08A7-4F04-BBA3-9B81D9C2194E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A429B14-EC52-4E40-AFE4-A55C463C5315}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A429B14-EC52-4E40-AFE4-A55C463C5315}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A429B14-EC52-4E40-AFE4-A55C463C5315}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A429B14-EC52-4E40-AFE4-A55C463C5315}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
