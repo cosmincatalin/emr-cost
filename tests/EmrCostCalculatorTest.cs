@@ -23,7 +23,7 @@ namespace tests
             
             var emrCostCalculator = new EmrCostCalculator(emrClient, ec2Client, logger);
             
-            await emrCostCalculator.GetClusterCost("j-9A0BZEK44EPV");
+            await emrCostCalculator.GetClusterCost("j-MFJC4FYSX32S");
 
             Assert.Pass();
         }

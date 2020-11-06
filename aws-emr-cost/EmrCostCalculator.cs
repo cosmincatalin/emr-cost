@@ -40,11 +40,9 @@ namespace aws_emr_cost
             if (cluster.InstanceCollectionType == InstanceCollectionType.INSTANCE_GROUP)
             {
                 _logger.Information("Cluster is configured as an Instance Group");
-                var response = _emrClient.ListInstanceGroupsAsync(new ListInstanceGroupsRequest
-                {
-                    ClusterId = clusterId
-                });
-                var groups = response.Result.InstanceGroups;
+                var response = await _emrClient.ListInstanceGroupsAsync(new ListInstanceGroupsRequest { ClusterId = clusterId });
+                var groups = response.InstanceGroups;
+                
                 foreach (var group in groups)
                 {
                     _logger.Information($"Getting information about group {group.Name}");
@@ -54,8 +52,6 @@ namespace aws_emr_cost
                     _logger.Information($"{cost:F2}$");
                 }
             }
-            
-            
         }
 
         private async Task<IEnumerable<Instance>> GetInstances(InstanceGroup instanceGroup, string clusterId)
@@ -74,7 +70,7 @@ namespace aws_emr_cost
         {
             if (instance.Market == MarketType.SPOT)
             {
-                _logger.Information($"Need to look into the Spot Market");
+                _logger.Information("\tNeed to look into the Spot Market");
                 var cost = await GetBilledPriceForPeriod(instance, availabilityZone);
                 return cost;
             }
@@ -106,7 +102,7 @@ namespace aws_emr_cost
                     prices.OrderBy(x => x.Key).Reverse().First().Key >= instance.Status.Timeline.EndDateTime
                     ) 
                 {
-                    _logger.Information($"Already have the prices cached in memory for {instance.InstanceType}");
+                    _logger.Information($"\t\tAlready have the prices cached in memory for {instance.InstanceType}");
                     return;
                 }
             }
@@ -114,7 +110,7 @@ namespace aws_emr_cost
             var nextToken = "";
             while (true)
             {
-                _logger.Information($"Requesting prices for {instance.InstanceType}");
+                _logger.Information($"\t\tRequesting prices for {instance.InstanceType} in interval {instance.Status.Timeline.CreationDateTime:yyyy-MM-dd HH:mm} -> {instance.Status.Timeline.EndDateTime:yyyy-MM-dd HH:mm}");
                 var response= await _ec2Client
                     .DescribeSpotPriceHistoryAsync(new DescribeSpotPriceHistoryRequest 
                     {
@@ -127,14 +123,6 @@ namespace aws_emr_cost
                     });
                 
                 nextToken = response.NextToken;
-
-                response
-                    .SpotPriceHistory
-                    .ForEach(price =>
-                    {
-                        prices[price.Timestamp] = float.Parse(price.Price, CultureInfo.InvariantCulture.NumberFormat);
-                        _logger.Information($"{price.Timestamp}");
-                    });
 
                 if (nextToken == "")
                 {
@@ -153,25 +141,25 @@ namespace aws_emr_cost
             var summedPrice = .0;
             var summedUntilTimestamp = instance.Status.Timeline.CreationDateTime;
             var indexedPrices =  prices.OrderBy(x => x.Key).ToArray();
-            // _logger.Information($"{indexedPrices[0].Key}: {indexedPrices[0].Value}");
-            // for (var i = 0; i < indexedPrices.Length;)
-            // {
-            //     TimeSpan secondsPassed;
-                // if (i == indexedPrices.Length - 1 || instance.Status.Timeline.EndDateTime < indexedPrices[i + 1].Key)
-                // {
-                //     _logger.Information($"Summing up partial cost");
-                //     secondsPassed = instance.Status.Timeline.EndDateTime - summedUntilTimestamp;
-                //     summedPrice += secondsPassed.Seconds * indexedPrices[i].Value / 3600;
-                // }
-                // if (indexedPrices[i].Key <= summedUntilTimestamp && summedUntilTimestamp < indexedPrices[i + 1].Key)
-                // {
-                //     _logger.Information($"Summing up partial cost");
-                //     secondsPassed = indexedPrices[i + 1].Key - summedUntilTimestamp;
-                //     summedPrice += secondsPassed.Seconds * indexedPrices[i].Value / 3600;
-                //     summedUntilTimestamp = indexedPrices[i + 1].Key;   
-                // }
-                // _logger.Information($"{indexedPrices[i].Key}");
-            // }
+            _logger.Information($"{indexedPrices[0].Key}: {indexedPrices[0].Value}");
+            for (var i = 0; i < indexedPrices.Length;)
+            {
+                TimeSpan secondsPassed;
+                if (i == indexedPrices.Length - 1 || instance.Status.Timeline.EndDateTime < indexedPrices[i + 1].Key)
+                {
+                    _logger.Information($"Summing up partial cost");
+                    secondsPassed = instance.Status.Timeline.EndDateTime - summedUntilTimestamp;
+                    summedPrice += secondsPassed.Seconds * indexedPrices[i].Value / 3600;
+                }
+                if (indexedPrices[i].Key <= summedUntilTimestamp && summedUntilTimestamp < indexedPrices[i + 1].Key)
+                {
+                    _logger.Information($"Summing up partial cost");
+                    secondsPassed = indexedPrices[i + 1].Key - summedUntilTimestamp;
+                    summedPrice += secondsPassed.Seconds * indexedPrices[i].Value / 3600;
+                    summedUntilTimestamp = indexedPrices[i + 1].Key;   
+                }
+                _logger.Information($"{indexedPrices[i].Key}");
+            }
 
             return summedPrice;
         }
